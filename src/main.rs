@@ -4,15 +4,9 @@ mod index;
 
 use clap::command;
 use clap::{arg, Command};
-use std::io;
+use std::error;
 
-pub struct Todo {
-    author: String,
-    body: String,
-    severity: usize,
-}
-
-fn main() -> Result<(), io::Error> {
+fn main() -> Result<(), Box<dyn error::Error>> {
     let cmd = command!()
         .propagate_version(true)
         .subcommand_required(true)
