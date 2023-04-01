@@ -1,6 +1,7 @@
 #![allow(unused_variables)]
 mod doit;
 mod index;
+mod report;
 
 use clap::{arg, ArgAction, Command};
 use clap::{command, value_parser};
@@ -29,7 +30,10 @@ fn main() -> Result<(), Box<dyn error::Error>> {
                     "Catalogs TODOs within a directory and all of its subdirectories (must be within a git repository)",
                 )
                 .arg(arg!(<PATH>).required(true)),
-        );
+        )
+        .subcommand(Command::new("report").about(
+            "Outputs indexed TODOs",
+        ));
 
     let matches = cmd.get_matches();
 
@@ -63,6 +67,9 @@ fn main() -> Result<(), Box<dyn error::Error>> {
                     .get_one::<String>("PATH")
                     .expect("`doit` requires a <PATH>"),
             )?;
+        }
+        Some(("report", _)) => {
+            report::run()?;
         }
         _ => unreachable!("Exhausted list of subcommands and subcommand_required prevents `None`"),
     }

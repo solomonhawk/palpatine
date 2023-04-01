@@ -87,6 +87,7 @@ pub fn index_file(
     index: &mut Index,
     entry: &DirEntry,
     repo: &Repository,
+    indexed_count: &mut usize,
 ) -> Result<(), Box<dyn error::Error>> {
     let mut todos: Vec<Todo> = vec![];
 
@@ -131,6 +132,8 @@ pub fn index_file(
             });
         }
     }
+
+    *indexed_count += 1;
 
     index.insert(
         entry.path().into(),

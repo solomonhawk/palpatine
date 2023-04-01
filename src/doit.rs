@@ -35,9 +35,10 @@ pub fn run(rel_path: &str) -> Result<(), Box<dyn error::Error>> {
         .unwrap();
 
     let mut index: Index = read_index(&repo)?;
+    let mut indexed_count = 0;
 
     visit_dirs(&path, &repo, &mut |entry: &DirEntry| {
-        match index_file(&mut index, &entry, &repo) {
+        match index_file(&mut index, &entry, &repo, &mut indexed_count) {
             Err(err) => {
                 error!(
                     "failed to index file {path} ({err})",
@@ -48,6 +49,8 @@ pub fn run(rel_path: &str) -> Result<(), Box<dyn error::Error>> {
             _ => (),
         };
     })?;
+
+    println!("{indexed_count} file(s) were updated");
 
     report_index(&index);
 
@@ -74,7 +77,7 @@ fn visit_dirs(dir: &Path, repo: &Repository, cb: &mut dyn FnMut(&DirEntry)) -> i
     Ok(())
 }
 
-fn absolute_path(path: impl AsRef<Path>) -> io::Result<PathBuf> {
+pub fn absolute_path(path: impl AsRef<Path>) -> io::Result<PathBuf> {
     let path = path.as_ref();
 
     let absolute_path = if path.is_absolute() {
