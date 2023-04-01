@@ -1,12 +1,11 @@
+use log::*;
 use std::collections::HashMap;
 use std::error;
 use std::fs;
 use std::fs::DirBuilder;
 use std::fs::DirEntry;
-use std::fs::File;
-use std::io::Write;
-use std::io::{self, ErrorKind};
 use std::path::Path;
+use std::process;
 use std::time::SystemTime;
 
 use git2::Repository;
@@ -35,47 +34,92 @@ pub struct IndexData {
 
 pub type Index = HashMap<Box<Path>, IndexedEntry>;
 
-pub fn write_index(index: &Index, repo: &Repository) -> Result<(), Box<dyn error::Error>> {
+pub fn read_index(repo: &Repository) -> Result<Index, Box<dyn error::Error>> {
     let workdir = repo
         .workdir()
         .expect("ERROR: could not find workdir, is this a git directory or subdirectory?");
 
-    let index_str = serde_json::to_string(index).unwrap();
-    let dir_builder = DirBuilder::new();
+    match std::fs::read_to_string(Path::new(workdir).join(".palpatine/index.json")) {
+        Ok(index_contents) => Ok(serde_json::from_str(&index_contents)?),
+        Err(err) => Ok(HashMap::new()),
+    }
+}
 
-    dir_builder.create(Path::new(workdir).join(".palpatine"))?;
+pub fn write_index(index: &Index, repo: &Repository) -> Result<(), Box<dyn error::Error>> {
+    let workdir = repo
+        .workdir()
+        .expect("ERROR: could not find workdir, is this a git directory or subdirectory?");
+    let palpatine_dir = Path::new(workdir).join(".palpatine");
+
+    if !palpatine_dir.is_dir() {
+        DirBuilder::new().create(palpatine_dir)?;
+    }
 
     std::fs::write(
         Path::new(workdir).join(".palpatine/index.json"),
-        serde_json::to_string_pretty(&index_str).unwrap(),
+        serde_json::to_string_pretty(&index).unwrap(),
     )?;
 
     Ok(())
 }
 
+pub fn report_index(index: &Index) {
+    for entry in index.values() {
+        if entry.todos.len() > 0 {
+            println!(
+                "Found {} Todos in {}",
+                entry.todos.len(),
+                entry.relative_path.display()
+            );
+
+            for todo in &entry.todos {
+                println!(
+                    "    TODO({author}): {body}",
+                    author = todo.author,
+                    body = todo.body
+                );
+            }
+        }
+    }
+}
+
 pub fn index_file(
+    index: &mut Index,
     entry: &DirEntry,
     repo: &Repository,
-) -> Result<IndexedEntry, Box<dyn error::Error>> {
+) -> Result<(), Box<dyn error::Error>> {
     let mut todos: Vec<Todo> = vec![];
 
     let last_modified = entry
         .metadata()
         .map_err(|err| {
-            eprintln!(
-                "ERROR: could not get file metadata for {filename:?} ({err})",
+            error!(
+                "could not get file metadata for {filename:?} ({err})",
                 filename = entry.file_name()
             );
+            process::exit(1);
         })
         .unwrap()
-        .modified();
+        .modified()
+        .unwrap();
 
-    println!("repo path: {:?}", repo.workdir());
+    if let Some(existing_entry) = index.get(entry.path().as_path()) {
+        if existing_entry.last_indexed >= last_modified {
+            debug!(
+                "Skipping {path}, index is up to date",
+                path = entry.path().display()
+            );
+            return Ok(());
+        }
+    }
+
+    debug!("Indexing {path}", path = entry.path().display());
 
     let file_contents = fs::read_to_string(entry.path())?;
     let entry_path = entry.path();
     let relative_path = entry_path.strip_prefix(repo.workdir().unwrap()).unwrap();
 
+    // TODO: better pattern matching for todos
     for (row, line) in file_contents.lines().enumerate() {
         if let Some(col) = line.find("TODO:") {
             if !is_comment(&line) {
@@ -88,12 +132,17 @@ pub fn index_file(
         }
     }
 
-    Ok(IndexedEntry {
-        path: entry.path().into(),
-        relative_path: relative_path.into(),
-        todos,
-        last_indexed: SystemTime::now(),
-    })
+    index.insert(
+        entry.path().into(),
+        IndexedEntry {
+            path: entry.path().into(),
+            relative_path: relative_path.into(),
+            todos,
+            last_indexed: SystemTime::now(),
+        },
+    );
+
+    Ok(())
 }
 
 fn extract_todo(
@@ -103,17 +152,18 @@ fn extract_todo(
     path: &Path,
     repo: &Repository,
 ) -> Result<Option<Todo>, Box<dyn error::Error>> {
-    let blame = repo.blame_file(path, None)?;
+    let blame = repo.blame_file(path, None);
 
-    assert!(
-        blame.len() == 1,
-        "ERROR: blame entry should only contain one hunk"
-    );
+    // TODO: add log levels, check if error is due to file not being in the git index
+    if blame.is_err() {
+        warn!("Could not get blame info for {path:?}");
+        return Ok(None);
+    }
 
     let mut author = "Unknown".to_string();
     let mut body = None;
 
-    if let Some(blame) = blame.get_line(row) {
+    if let Some(blame) = blame.unwrap().get_line(row) {
         blame
             .orig_signature()
             .name()
@@ -136,6 +186,7 @@ fn extract_todo(
     }))
 }
 
+// TODO: better pattern matching for comments
 fn is_comment(line: &str) -> bool {
     let trimmed = line.trim();
 

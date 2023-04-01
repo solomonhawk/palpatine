@@ -2,12 +2,24 @@
 mod doit;
 mod index;
 
-use clap::command;
-use clap::{arg, Command};
+use clap::{arg, ArgAction, Command};
+use clap::{command, value_parser};
+
 use std::error;
+use std::str::FromStr;
+use stderrlog::Timestamp;
 
 fn main() -> Result<(), Box<dyn error::Error>> {
     let cmd = command!()
+        .arg(arg!(verbosity: -v --verbose)
+            .help("Increase message verbosity")
+            .action(ArgAction::Count))
+        .arg(arg!(-q --quiet)
+            .help("Silence all output")
+            .action(ArgAction::SetTrue))
+        .arg(arg!(-t --timestamp <TS>)
+            .help("prepend log lines with a timestamp")
+            .value_parser(value_parser!(Timestamp)))
         .propagate_version(true)
         .subcommand_required(true)
         .arg_required_else_help(true)
@@ -20,6 +32,29 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         );
 
     let matches = cmd.get_matches();
+
+    let verbose = matches.get_count("verbosity") as usize;
+    let quiet = matches.get_flag("quiet");
+    let ts = matches
+        .get_one::<String>("timestamp")
+        .map(|v| {
+            stderrlog::Timestamp::from_str(v).unwrap_or_else(|_| {
+                clap::Error::raw(
+                    clap::error::ErrorKind::InvalidValue,
+                    "invalid value for 'timestamp'",
+                )
+                .exit()
+            })
+        })
+        .unwrap_or(stderrlog::Timestamp::Off);
+
+    stderrlog::new()
+        .module(module_path!())
+        .quiet(quiet)
+        .verbosity(verbose)
+        .timestamp(ts)
+        .init()
+        .unwrap();
 
     match matches.subcommand() {
         Some(("doit", sub_matches)) => {

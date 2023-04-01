@@ -1,50 +1,55 @@
-use std::collections::HashMap;
+use log::*;
 use std::fs::{self, DirEntry};
-use std::io;
 use std::path::{Path, PathBuf};
 use std::{env, error};
+use std::{io, process};
 
 use path_clean::PathClean;
 
 use git2::Repository;
 
-use crate::index::{self, index_file, write_index, Index};
+use crate::index::{index_file, read_index, report_index, write_index, Index};
 
 pub fn run(rel_path: &str) -> Result<(), Box<dyn error::Error>> {
     let dir_path = absolute_path(&rel_path)
         .map_err(|err| {
-            eprintln!("ERROR: failed to canonicalize the provided path '{rel_path}': {err}");
+            error!("failed to canonicalize the provided path '{rel_path}': {err}");
+            process::exit(1);
         })
         .unwrap();
 
     let path = Path::new(&dir_path);
 
     if !path.is_dir() {
-        eprintln!("ERROR: the PATH {path:?} is not a directory");
+        error!("the PATH {path:?} is not a directory");
+        process::exit(1);
     }
 
-    let repo = Repository::discover(path).map_err(|err| {
-        eprintln!(
-            "ERROR: the provided path {path:?} does not appear to exist within a git repository ({err})"
-        )
-    }).unwrap();
+    let repo = Repository::discover(path)
+        .map_err(|err| {
+            error!(
+             "the provided path {path:?} does not appear to exist within a git repository ({err})"
+            );
+            process::exit(1);
+        })
+        .unwrap();
 
-    let mut index: Index = HashMap::new();
+    let mut index: Index = read_index(&repo)?;
 
-    // recursively walk directories from `path`, collecting all text files
     visit_dirs(&path, &repo, &mut |entry: &DirEntry| {
-        println!("{:?}", entry.path());
-
-        // TODO: load index and pass in previous indexed_entry
-        match index_file(&entry, &repo) {
+        match index_file(&mut index, &entry, &repo) {
             Err(err) => {
-                eprintln!("{err:?}");
+                error!(
+                    "failed to index file {path} ({err})",
+                    path = entry.path().display()
+                );
+                process::exit(1);
             }
-            Ok(indexed_entry) => {
-                index.insert(indexed_entry.path.clone(), indexed_entry);
-            }
-        }
+            _ => (),
+        };
     })?;
+
+    report_index(&index);
 
     write_index(&index, &repo)
 }
