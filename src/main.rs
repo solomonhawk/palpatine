@@ -1,4 +1,3 @@
-#![allow(unused_variables)]
 mod doit;
 mod index;
 mod report;

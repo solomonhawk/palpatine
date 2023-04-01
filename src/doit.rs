@@ -8,7 +8,7 @@ use path_clean::PathClean;
 
 use git2::Repository;
 
-use crate::index::{index_file, read_index, report_index, write_index, Index};
+use crate::index::{index_file, read_index, report_index, write_index};
 
 pub fn run(rel_path: &str) -> Result<(), Box<dyn error::Error>> {
     let dir_path = absolute_path(&rel_path)

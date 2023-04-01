@@ -41,7 +41,7 @@ pub fn read_index(repo: &Repository) -> Result<Index, Box<dyn error::Error>> {
 
     match std::fs::read_to_string(Path::new(workdir).join(".palpatine/index.json")) {
         Ok(index_contents) => Ok(serde_json::from_str(&index_contents)?),
-        Err(err) => Ok(HashMap::new()),
+        Err(_) => Ok(HashMap::new()),
     }
 }
 

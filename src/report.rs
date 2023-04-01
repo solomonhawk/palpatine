@@ -2,10 +2,8 @@ use git2::Repository;
 use log::*;
 use std::{error, path::Path, process};
 
-use crate::{
-    doit::absolute_path,
-    index::{read_index, report_index, Index},
-};
+use crate::doit::absolute_path;
+use crate::index::{read_index, report_index};
 
 // TODO: extract shared code, create better boundary/abstraction
 pub fn run() -> Result<(), Box<dyn error::Error>> {
