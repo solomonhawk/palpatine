@@ -33,7 +33,7 @@ pub fn run() -> Result<(), Box<dyn error::Error>> {
         })
         .unwrap();
 
-    let mut index: Index = read_index(&repo)?;
+    let index = read_index(&repo)?;
 
     report_index(&index);
 

@@ -34,7 +34,7 @@ pub fn run(rel_path: &str) -> Result<(), Box<dyn error::Error>> {
         })
         .unwrap();
 
-    let mut index: Index = read_index(&repo)?;
+    let mut index = read_index(&repo)?;
     let mut indexed_count = 0;
 
     visit_dirs(&path, &repo, &mut |entry: &DirEntry| {
@@ -53,7 +53,6 @@ pub fn run(rel_path: &str) -> Result<(), Box<dyn error::Error>> {
     println!("{indexed_count} file(s) were updated");
 
     report_index(&index);
-
     write_index(&index, &repo)
 }
 
