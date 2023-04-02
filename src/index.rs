@@ -8,8 +8,9 @@ use std::path::Path;
 use std::process;
 use std::time::SystemTime;
 
-use git2::Repository;
 use serde::{Deserialize, Serialize};
+
+use crate::config::Config;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Todo {
@@ -34,41 +35,28 @@ pub struct IndexData {
 
 pub type Index = HashMap<Box<Path>, IndexedEntry>;
 
-pub fn read_index(repo: &Repository) -> Result<Index, Box<dyn error::Error>> {
-    let workdir = repo
-        .workdir()
-        .expect("ERROR: could not find workdir, is this a git directory or subdirectory?");
-
-    match std::fs::read_to_string(Path::new(workdir).join(".palpatine/index.json")) {
+pub fn read_index(config: &Config) -> Result<Index, Box<dyn error::Error>> {
+    match std::fs::read_to_string(config.index_file_path()) {
         Ok(index_contents) => Ok(serde_json::from_str(&index_contents)?),
         Err(_) => Ok(HashMap::new()),
     }
 }
 
-pub fn write_index(index: &Index, repo: &Repository) -> Result<(), Box<dyn error::Error>> {
-    let workdir = repo
-        .workdir()
-        .expect("ERROR: could not find workdir, is this a git directory or subdirectory?");
-    let palpatine_dir = Path::new(workdir).join(".palpatine");
-
-    if !palpatine_dir.is_dir() {
-        DirBuilder::new().create(palpatine_dir)?;
+pub fn write_index(index: &Index, config: &Config) -> Result<(), Box<dyn error::Error>> {
+    if !config.index_dir().is_dir() {
+        DirBuilder::new().create(config.index_dir())?;
     }
 
     std::fs::write(
-        Path::new(workdir).join(".palpatine/index.json"),
+        config.index_file_path(),
         serde_json::to_string_pretty(&index).unwrap(),
     )?;
 
     Ok(())
 }
 
-pub fn delete_index(repo: &Repository) -> Result<(), Box<dyn error::Error>> {
-    let workdir = repo
-        .workdir()
-        .expect("ERROR: could not find workdir, is this a git directory or subdirectory?");
-
-    std::fs::remove_dir_all(Path::new(workdir).join(".palpatine"))?;
+pub fn delete_index(config: &Config) -> Result<(), Box<dyn error::Error>> {
+    std::fs::remove_dir_all(config.index_dir())?;
 
     Ok(())
 }
@@ -93,10 +81,10 @@ pub fn report_index(index: &Index) {
 pub fn index_file(
     index: &mut Index,
     entry: &DirEntry,
-    repo: &Repository,
+    config: &Config,
     indexed_count: &mut usize,
 ) -> Result<(), Box<dyn error::Error>> {
-    match should_index(index, entry) {
+    match should_index(index, entry, config) {
         IndexCommand::Skip(reason) => {
             if reason.is_some() {
                 debug!(
@@ -115,7 +103,7 @@ pub fn index_file(
             debug!("Indexing {path}", path = entry.path().display());
 
             let entry_path = entry.path();
-            let relative_path = entry_path.strip_prefix(repo.workdir().unwrap()).unwrap();
+            let relative_path = entry_path.strip_prefix(config.root_dir()).unwrap();
 
             // TODO: better pattern matching for todos
             for (row, line) in file_contents.lines().enumerate() {
@@ -124,7 +112,7 @@ pub fn index_file(
                         continue;
                     }
 
-                    extract_todo(line, row, col, &relative_path, &repo)?.map(|todo| {
+                    extract_todo(line, row, col, &relative_path, config)?.map(|todo| {
                         todos.push(todo);
                     });
                 }
@@ -133,7 +121,7 @@ pub fn index_file(
             *indexed_count += 1;
 
             index.insert(
-                entry.path().into(),
+                relative_path.into(),
                 IndexedEntry {
                     path: entry.path().into(),
                     relative_path: relative_path.into(),
@@ -155,7 +143,7 @@ enum IndexCommand {
     Scan(FileContents),
 }
 
-fn should_index(index: &Index, entry: &DirEntry) -> IndexCommand {
+fn should_index(index: &Index, entry: &DirEntry, config: &Config) -> IndexCommand {
     if entry.path().ends_with(".palpatine/index.json") {
         return IndexCommand::Skip(None);
     }
@@ -173,7 +161,10 @@ fn should_index(index: &Index, entry: &DirEntry) -> IndexCommand {
         .modified()
         .unwrap();
 
-    if let Some(existing_entry) = index.get(entry.path().as_path()) {
+    let entry_path = entry.path();
+    let relative_path = entry_path.strip_prefix(config.root_dir()).unwrap();
+
+    if let Some(existing_entry) = index.get(relative_path) {
         if existing_entry.last_indexed >= last_modified {
             debug!(
                 "Skipping {path}, index is up to date",
@@ -212,11 +203,11 @@ fn extract_todo(
     row: usize,
     col: usize,
     path: &Path,
-    repo: &Repository,
+    config: &Config,
 ) -> Result<Option<Todo>, Box<dyn error::Error>> {
-    let blame = repo.blame_file(path, None);
+    let blame = config.repo.blame_file(path, None);
 
-    // TODO: add log levels, check if error is due to file not being in the git index
+    // TODO: check if error is due to file not being in the git index
     if blame.is_err() {
         warn!("Could not get blame info for {path:?}");
         return Ok(None);

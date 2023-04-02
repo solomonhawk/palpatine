@@ -1,12 +1,15 @@
 mod clean;
+mod config;
 mod doit;
 mod index;
 mod report;
 
 use clap::{arg, ArgAction, Command};
 use clap::{command, value_parser};
+use config::Config;
 
 use std::error;
+use std::path::Path;
 use std::str::FromStr;
 use stderrlog::Timestamp;
 
@@ -29,14 +32,18 @@ fn main() -> Result<(), Box<dyn error::Error>> {
                 .about(
                     "Catalogs TODOs within a directory and all of its subdirectories (must be within a git repository)",
                 )
-                .arg(arg!(<PATH>).required(true)),
+                .arg(arg!(<PATH>).default_missing_value(".")),
         )
-        .subcommand(Command::new("report").about(
-            "Outputs indexed TODOs",
-        ))
-        .subcommand(Command::new("clean").about(
-            "Removes the cached TODOs index",
-        ));
+        .subcommand(
+            Command::new("report")
+                .about("Outputs indexed TODOs")
+                .arg(arg!(<PATH>).default_missing_value("."))
+        )
+        .subcommand(
+            Command::new("clean")
+                .about("Removes the cached TODOs index")
+                .arg(arg!(<PATH>).default_missing_value("."))
+        );
 
     let matches = cmd.get_matches();
 
@@ -65,17 +72,28 @@ fn main() -> Result<(), Box<dyn error::Error>> {
 
     match matches.subcommand() {
         Some(("doit", sub_matches)) => {
-            doit::run(
+            let path = Path::new(
                 sub_matches
                     .get_one::<String>("PATH")
                     .expect("`doit` requires a <PATH>"),
-            )?;
+            );
+            doit::run(&Config::new(Some(path.into())))?;
         }
-        Some(("report", _)) => {
-            report::run()?;
+        Some(("report", sub_matches)) => {
+            let path = Path::new(
+                sub_matches
+                    .get_one::<String>("PATH")
+                    .expect("`report` requires a <PATH>"),
+            );
+            report::run(&Config::new(Some(path.into())))?;
         }
-        Some(("clean", _)) => {
-            clean::run()?;
+        Some(("clean", sub_matches)) => {
+            let path = Path::new(
+                sub_matches
+                    .get_one::<String>("PATH")
+                    .expect("`clean` requires a <PATH>"),
+            );
+            clean::run(&Config::new(Some(path.into())))?;
         }
         _ => unreachable!("Exhausted list of subcommands and subcommand_required prevents `None`"),
     }
