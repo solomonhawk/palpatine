@@ -1,3 +1,4 @@
+mod clean;
 mod doit;
 mod index;
 mod report;
@@ -32,6 +33,9 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         )
         .subcommand(Command::new("report").about(
             "Outputs indexed TODOs",
+        ))
+        .subcommand(Command::new("clean").about(
+            "Removes the cached TODOs index",
         ));
 
     let matches = cmd.get_matches();
@@ -69,6 +73,9 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         }
         Some(("report", _)) => {
             report::run()?;
+        }
+        Some(("clean", _)) => {
+            clean::run()?;
         }
         _ => unreachable!("Exhausted list of subcommands and subcommand_required prevents `None`"),
     }

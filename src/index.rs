@@ -63,18 +63,25 @@ pub fn write_index(index: &Index, repo: &Repository) -> Result<(), Box<dyn error
     Ok(())
 }
 
+pub fn delete_index(repo: &Repository) -> Result<(), Box<dyn error::Error>> {
+    let workdir = repo
+        .workdir()
+        .expect("ERROR: could not find workdir, is this a git directory or subdirectory?");
+
+    std::fs::remove_dir_all(Path::new(workdir).join(".palpatine"))?;
+
+    Ok(())
+}
+
 pub fn report_index(index: &Index) {
     for entry in index.values() {
         if entry.todos.len() > 0 {
-            println!(
-                "Found {} Todos in {}",
-                entry.todos.len(),
-                entry.relative_path.display()
-            );
+            println!("{} TODOs in {}", entry.todos.len(), entry.path.display());
 
             for todo in &entry.todos {
                 println!(
-                    "    TODO({author}): {body}",
+                    "    {line}: TODO({author}): {body}",
+                    line = todo.line,
                     author = todo.author,
                     body = todo.body
                 );
@@ -89,7 +96,69 @@ pub fn index_file(
     repo: &Repository,
     indexed_count: &mut usize,
 ) -> Result<(), Box<dyn error::Error>> {
-    let mut todos: Vec<Todo> = vec![];
+    match should_index(index, entry) {
+        IndexCommand::Skip(reason) => {
+            if reason.is_some() {
+                debug!(
+                    "Skipping {path}, {reason}",
+                    path = entry.path().display(),
+                    reason = reason.unwrap()
+                );
+            }
+
+            Ok(())
+        }
+
+        IndexCommand::Scan(file_contents) => {
+            let mut todos: Vec<Todo> = vec![];
+
+            debug!("Indexing {path}", path = entry.path().display());
+
+            let entry_path = entry.path();
+            let relative_path = entry_path.strip_prefix(repo.workdir().unwrap()).unwrap();
+
+            // TODO: better pattern matching for todos
+            for (row, line) in file_contents.lines().enumerate() {
+                if let Some(col) = line.find("TODO:") {
+                    if !is_comment(&line) {
+                        continue;
+                    }
+
+                    extract_todo(line, row, col, &relative_path, &repo)?.map(|todo| {
+                        todos.push(todo);
+                    });
+                }
+            }
+
+            *indexed_count += 1;
+
+            index.insert(
+                entry.path().into(),
+                IndexedEntry {
+                    path: entry.path().into(),
+                    relative_path: relative_path.into(),
+                    todos,
+                    last_indexed: SystemTime::now(),
+                },
+            );
+
+            Ok(())
+        }
+    }
+}
+
+type Reason = Option<String>;
+type FileContents = String;
+
+enum IndexCommand {
+    Skip(Reason),
+    Scan(FileContents),
+}
+
+fn should_index(index: &Index, entry: &DirEntry) -> IndexCommand {
+    if entry.path().ends_with(".palpatine/index.json") {
+        return IndexCommand::Skip(None);
+    }
 
     let last_modified = entry
         .metadata()
@@ -110,42 +179,32 @@ pub fn index_file(
                 "Skipping {path}, index is up to date",
                 path = entry.path().display()
             );
-            return Ok(());
+            return IndexCommand::Skip(Some(String::from("already up to date")));
         }
     }
 
-    debug!("Indexing {path}", path = entry.path().display());
+    let file = fs::read(entry.path());
 
-    let file_contents = fs::read_to_string(entry.path())?;
-    let entry_path = entry.path();
-    let relative_path = entry_path.strip_prefix(repo.workdir().unwrap()).unwrap();
-
-    // TODO: better pattern matching for todos
-    for (row, line) in file_contents.lines().enumerate() {
-        if let Some(col) = line.find("TODO:") {
-            if !is_comment(&line) {
-                continue;
-            }
-
-            extract_todo(line, row, col, &relative_path, &repo)?.map(|todo| {
-                todos.push(todo);
-            });
-        }
+    if file.is_err() {
+        error!(
+            "Failed to read file data for {path}",
+            path = entry.path().display()
+        );
+        process::exit(1);
     }
 
-    *indexed_count += 1;
+    let file_data = file.unwrap();
+    let file_contents = std::str::from_utf8(&file_data);
 
-    index.insert(
-        entry.path().into(),
-        IndexedEntry {
-            path: entry.path().into(),
-            relative_path: relative_path.into(),
-            todos,
-            last_indexed: SystemTime::now(),
-        },
-    );
+    if file_contents.is_err() {
+        debug!(
+            "Skipping {path}, contents are not UTF-8",
+            path = entry.path().display()
+        );
+        return IndexCommand::Skip(Some(String::from("contents are not UTF-8")));
+    }
 
-    Ok(())
+    IndexCommand::Scan(file_contents.unwrap().into())
 }
 
 fn extract_todo(
@@ -173,6 +232,7 @@ fn extract_todo(
             .map(|name| author = name.to_string());
     }
 
+    // TODO: capture full body even for multi-line comments?
     if let Some((_, todo_body)) = line.split_once("TODO:") {
         body = Some(todo_body.trim().to_string());
     }
