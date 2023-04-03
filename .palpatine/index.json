@@ -1,0 +1,124 @@
+{
+  "src/main.rs": {
+    "path": "/Users/solomonhawk/Code/Personal/palpatine/src/main.rs",
+    "relative_path": "src/main.rs",
+    "todos": [],
+    "last_indexed": {
+      "secs_since_epoch": 1680448993,
+      "nanos_since_epoch": 726670000
+    }
+  },
+  "src/config.rs": {
+    "path": "/Users/solomonhawk/Code/Personal/palpatine/src/config.rs",
+    "relative_path": "src/config.rs",
+    "todos": [],
+    "last_indexed": {
+      "secs_since_epoch": 1680448993,
+      "nanos_since_epoch": 714988000
+    }
+  },
+  "Cargo.toml": {
+    "path": "/Users/solomonhawk/Code/Personal/palpatine/Cargo.toml",
+    "relative_path": "Cargo.toml",
+    "todos": [],
+    "last_indexed": {
+      "secs_since_epoch": 1680448993,
+      "nanos_since_epoch": 710448000
+    }
+  },
+  "src/clean.rs": {
+    "path": "/Users/solomonhawk/Code/Personal/palpatine/src/clean.rs",
+    "relative_path": "src/clean.rs",
+    "todos": [],
+    "last_indexed": {
+      "secs_since_epoch": 1680448993,
+      "nanos_since_epoch": 714864000
+    }
+  },
+  "sample/test.ts": {
+    "path": "/Users/solomonhawk/Code/Personal/palpatine/sample/test.ts",
+    "relative_path": "sample/test.ts",
+    "todos": [
+      {
+        "line": 2,
+        "col": 5,
+        "author": "Solomon Hawk",
+        "body": "finish implementing hello world"
+      }
+    ],
+    "last_indexed": {
+      "secs_since_epoch": 1680448993,
+      "nanos_since_epoch": 714495000
+    }
+  },
+  "Cargo.lock": {
+    "path": "/Users/solomonhawk/Code/Personal/palpatine/Cargo.lock",
+    "relative_path": "Cargo.lock",
+    "todos": [],
+    "last_indexed": {
+      "secs_since_epoch": 1680448993,
+      "nanos_since_epoch": 710823000
+    }
+  },
+  "src/report.rs": {
+    "path": "/Users/solomonhawk/Code/Personal/palpatine/src/report.rs",
+    "relative_path": "src/report.rs",
+    "todos": [],
+    "last_indexed": {
+      "secs_since_epoch": 1680448993,
+      "nanos_since_epoch": 726497000
+    }
+  },
+  "src/index.rs": {
+    "path": "/Users/solomonhawk/Code/Personal/palpatine/src/index.rs",
+    "relative_path": "src/index.rs",
+    "todos": [
+      {
+        "line": 108,
+        "col": 15,
+        "author": "Solomon Hawk",
+        "body": "better pattern matching for todos"
+      },
+      {
+        "line": 210,
+        "col": 7,
+        "author": "Solomon Hawk",
+        "body": "check if error is due to file not being in the git index"
+      },
+      {
+        "line": 226,
+        "col": 7,
+        "author": "Solomon Hawk",
+        "body": "capture full body even for multi-line comments?"
+      },
+      {
+        "line": 243,
+        "col": 3,
+        "author": "Solomon Hawk",
+        "body": "better pattern matching for comments"
+      }
+    ],
+    "last_indexed": {
+      "secs_since_epoch": 1680448993,
+      "nanos_since_epoch": 726316000
+    }
+  },
+  ".gitignore": {
+    "path": "/Users/solomonhawk/Code/Personal/palpatine/.gitignore",
+    "relative_path": ".gitignore",
+    "todos": [],
+    "last_indexed": {
+      "secs_since_epoch": 1680448993,
+      "nanos_since_epoch": 710858000
+    }
+  },
+  "src/doit.rs": {
+    "path": "/Users/solomonhawk/Code/Personal/palpatine/src/doit.rs",
+    "relative_path": "src/doit.rs",
+    "todos": [],
+    "last_indexed": {
+      "secs_since_epoch": 1680448993,
+      "nanos_since_epoch": 714744000
+    }
+  }
+}
