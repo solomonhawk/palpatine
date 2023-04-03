@@ -11,6 +11,7 @@ pub fn run(config: &Config) -> Result<(), Box<dyn error::Error>> {
     let mut index = read_index(config)?;
     let mut indexed_count = 0;
 
+    // TODO: can this be multi-threaded?
     visit_dirs(&config.root_dir(), config, &mut |entry: &DirEntry| {
         match index_file(&mut index, &entry, config, &mut indexed_count) {
             Err(err) => {
