@@ -1,29 +1,34 @@
 {
-  "src/main.rs": {
-    "path": "/Users/solomonhawk/Code/Personal/palpatine/src/main.rs",
-    "relative_path": "src/main.rs",
-    "todos": [],
+  "README.md": {
+    "path": "/Users/solomonhawk/Code/Personal/palpatine/README.md",
+    "relative_path": "README.md",
+    "todos": [
+      {
+        "line": 5,
+        "col": 3,
+        "author": "Solomon Hawk",
+        "body": "add a better readme"
+      }
+    ],
     "last_indexed": {
-      "secs_since_epoch": 1680448993,
-      "nanos_since_epoch": 726670000
+      "secs_since_epoch": 1680536885,
+      "nanos_since_epoch": 354934000
     }
   },
-  "src/config.rs": {
-    "path": "/Users/solomonhawk/Code/Personal/palpatine/src/config.rs",
-    "relative_path": "src/config.rs",
-    "todos": [],
+  "src/doit.rs": {
+    "path": "/Users/solomonhawk/Code/Personal/palpatine/src/doit.rs",
+    "relative_path": "src/doit.rs",
+    "todos": [
+      {
+        "line": 14,
+        "col": 7,
+        "author": "Solomon Hawk",
+        "body": "can this be multi-threaded?"
+      }
+    ],
     "last_indexed": {
-      "secs_since_epoch": 1680448993,
-      "nanos_since_epoch": 714988000
-    }
-  },
-  "Cargo.toml": {
-    "path": "/Users/solomonhawk/Code/Personal/palpatine/Cargo.toml",
-    "relative_path": "Cargo.toml",
-    "todos": [],
-    "last_indexed": {
-      "secs_since_epoch": 1680448993,
-      "nanos_since_epoch": 710448000
+      "secs_since_epoch": 1680536816,
+      "nanos_since_epoch": 620903000
     }
   },
   "src/clean.rs": {
@@ -33,40 +38,6 @@
     "last_indexed": {
       "secs_since_epoch": 1680448993,
       "nanos_since_epoch": 714864000
-    }
-  },
-  "sample/test.ts": {
-    "path": "/Users/solomonhawk/Code/Personal/palpatine/sample/test.ts",
-    "relative_path": "sample/test.ts",
-    "todos": [
-      {
-        "line": 2,
-        "col": 5,
-        "author": "Solomon Hawk",
-        "body": "finish implementing hello world"
-      }
-    ],
-    "last_indexed": {
-      "secs_since_epoch": 1680448993,
-      "nanos_since_epoch": 714495000
-    }
-  },
-  "Cargo.lock": {
-    "path": "/Users/solomonhawk/Code/Personal/palpatine/Cargo.lock",
-    "relative_path": "Cargo.lock",
-    "todos": [],
-    "last_indexed": {
-      "secs_since_epoch": 1680448993,
-      "nanos_since_epoch": 710823000
-    }
-  },
-  "src/report.rs": {
-    "path": "/Users/solomonhawk/Code/Personal/palpatine/src/report.rs",
-    "relative_path": "src/report.rs",
-    "todos": [],
-    "last_indexed": {
-      "secs_since_epoch": 1680448993,
-      "nanos_since_epoch": 726497000
     }
   },
   "src/index.rs": {
@@ -103,22 +74,74 @@
       "nanos_since_epoch": 726316000
     }
   },
+  "src/main.rs": {
+    "path": "/Users/solomonhawk/Code/Personal/palpatine/src/main.rs",
+    "relative_path": "src/main.rs",
+    "todos": [],
+    "last_indexed": {
+      "secs_since_epoch": 1680448993,
+      "nanos_since_epoch": 726670000
+    }
+  },
+  "Cargo.toml": {
+    "path": "/Users/solomonhawk/Code/Personal/palpatine/Cargo.toml",
+    "relative_path": "Cargo.toml",
+    "todos": [],
+    "last_indexed": {
+      "secs_since_epoch": 1680448993,
+      "nanos_since_epoch": 710448000
+    }
+  },
+  "src/report.rs": {
+    "path": "/Users/solomonhawk/Code/Personal/palpatine/src/report.rs",
+    "relative_path": "src/report.rs",
+    "todos": [],
+    "last_indexed": {
+      "secs_since_epoch": 1680448993,
+      "nanos_since_epoch": 726497000
+    }
+  },
   ".gitignore": {
     "path": "/Users/solomonhawk/Code/Personal/palpatine/.gitignore",
     "relative_path": ".gitignore",
     "todos": [],
     "last_indexed": {
-      "secs_since_epoch": 1680448993,
-      "nanos_since_epoch": 710858000
+      "secs_since_epoch": 1680536816,
+      "nanos_since_epoch": 612978000
     }
   },
-  "src/doit.rs": {
-    "path": "/Users/solomonhawk/Code/Personal/palpatine/src/doit.rs",
-    "relative_path": "src/doit.rs",
+  "Cargo.lock": {
+    "path": "/Users/solomonhawk/Code/Personal/palpatine/Cargo.lock",
+    "relative_path": "Cargo.lock",
     "todos": [],
     "last_indexed": {
       "secs_since_epoch": 1680448993,
-      "nanos_since_epoch": 714744000
+      "nanos_since_epoch": 710823000
+    }
+  },
+  "sample/test.ts": {
+    "path": "/Users/solomonhawk/Code/Personal/palpatine/sample/test.ts",
+    "relative_path": "sample/test.ts",
+    "todos": [
+      {
+        "line": 2,
+        "col": 5,
+        "author": "Solomon Hawk",
+        "body": "finish implementing hello world"
+      }
+    ],
+    "last_indexed": {
+      "secs_since_epoch": 1680448993,
+      "nanos_since_epoch": 714495000
+    }
+  },
+  "src/config.rs": {
+    "path": "/Users/solomonhawk/Code/Personal/palpatine/src/config.rs",
+    "relative_path": "src/config.rs",
+    "todos": [],
+    "last_indexed": {
+      "secs_since_epoch": 1680448993,
+      "nanos_since_epoch": 714988000
     }
   }
 }

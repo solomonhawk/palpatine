@@ -2,4 +2,4 @@
 
 A cli tool to help manage TODOs in `git` repositories.
 
-TODO: add a better readme
+// TODO: add a better readme
